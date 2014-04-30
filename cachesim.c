@@ -4,13 +4,21 @@ int addr_space = 24;
 int block_size;
 int num_sets;
 int assoc;
-int write_policy;
+char write_policy;
 int cache_size;
 int num_blocks;
 
 /* Will process and output all flags */
 void GetFlags(int argc, char *argv[]) 
 {
+	if (argc == 1)
+	{
+		block_size = 32;
+		num_sets = 64;
+		assoc = 1;
+		write_policy = 't';
+	}
+
 	while ((argc > 1) && (argv[1][0] == '-'))
 	{
 		switch (argv[1][1])
@@ -28,8 +36,8 @@ void GetFlags(int argc, char *argv[])
 				printf("Associativity = %d\n", assoc);
 				break;
 			case 'W':
-				write_policy = atoi(&argv[1][3]);
-				printf("Write policty = %d\n", write_policy);
+				write_policy = argv[1][3];
+				printf("Write policy = %c\n", write_policy);
 				break;
 			default:
 				printf("Wrong Argument: %s\n", argv[1]);
@@ -66,12 +74,31 @@ void PrintHeader()
 
 	cache_size = (num_sets * block_size * assoc) / 1024;
 	num_blocks = num_sets * assoc;
+   
+	int extra_space = (num_blocks * tag) / 8;
+	double percentage = ((double)extra_space / (cache_size * 1024)) * 100;
 
 	printf("%dKB %d-way associative cache:\n", cache_size, assoc);
-	printf("\tBlock size = %d bytes\n", block_size);
-	printf("\tNumber of [sets,blocks] = [%d,%d]\n", num_sets, num_blocks);
-	printf("\tExtra space for tag storage = ?? bytes (1.95%)\n");
-	printf("\tBits for [tag,index,offset] = [%d,%d,%d]\n", tag, index, offset);
+	printf("%2s Block size = %d bytes\n", "",  block_size);
+	printf("%2s Number of [sets,blocks] = [%d,%d]\n", "", num_sets, num_blocks);
+	printf("%2s Extra space for tag storage = %d bytes (%1.3g%)\n", "", extra_space, percentage);
+	printf("%2s Bits for [tag,index,offset] = [%d,%d,%d] = %d\n", "", tag, index, offset, tag+index+offset);
+	
+	if (write_policy == 't')
+		printf("%2s Write policy = %s\n", "", "Write-through");
+	else
+		printf("%2s Write policy = %s\n", "", "Write-back");
+
+	printf("\n");
+	printf("%-7s %-36s %-5s %s %19s\n", "Hex", "Binary Address", "Set", "Blk", 
+						 "Memory");
+   printf("%-7s %-31s %s %s %4s %4s %-4s %-4s %-4s\n", "Address", 
+						 "(tag/index/offset)", "Tag", "Index", "off", "Way", "UWay", 
+						 "Read", "Writ");
+   printf("%-7s %s %s %s %4s %4s %-4s %-4s %-4s\n", "=======", 
+						 "==========================", "========", "=====", "===", 
+						 "====", "====", "====", "====");
+	
 }
 
 void HexToBin(char hex[], int hexc, char *bin[6])
@@ -155,7 +182,7 @@ int main(int argc, char *argv[])
 	
 	int hexc = sizeof(hex);
 
-	printf("%s -> ", hex);
+	printf("%s", hex);
 
 	HexToBin(hex, hexc, bin);
 
