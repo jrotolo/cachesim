@@ -74,9 +74,95 @@ void PrintHeader()
 	printf("\tBits for [tag,index,offset] = [%d,%d,%d]\n", tag, index, offset);
 }
 
+void HexToBin(char hex[], int hexc, char *bin[6])
+{
+	int i = 0;
+	while (i != hexc)
+	{
+		switch (hex[i])
+		{
+			case '0':
+				bin[i] = "0000\0";
+				break;
+			case '1':
+				bin[i] = "0001\0";
+				break;
+			case '2':
+				bin[i] = "0010\0";
+				break;
+			case '3':
+				bin[i] = "0011\0";
+				break;
+			case '4':
+				bin[i] = "0100\0";
+				break;
+			case '5':
+				bin[i] = "0101\0";
+				break;
+			case '6':
+				bin[i] = "0110\0";
+				break;
+			case '7':
+				bin[i] = "0111\0";
+				break;
+			case '8':
+				bin[i] = "1000\0";
+				break;
+			case '9':
+				bin[i] = "1001\0";
+				break;
+			case 'a':
+				bin[i] = "1010\0";
+				break;
+			case 'b':
+				bin[i] = "1011\0";
+				break;
+			case 'c':
+				bin[i] = "1100\0";
+				break;
+			case 'd':
+				bin[i] = "1101\0";
+				break;
+			case 'e':
+				bin[i] = "1110\0";
+				break;
+			case 'f':
+				bin[i] = "1111\0";
+				break;
+			default:
+				break;
+		}
+		//printf("%s\n", bin[i]);
+		i++;
+	}
+	bin[5] = "\0";
+}
+
 int main(int argc, char *argv[]) 
 {
 	GetFlags(argc, argv);	
 	PrintHeader();
+	
+	char hex[6];
+	char *bin[6];
+
+	hex[0] = '0';
+	hex[1] = 'c';
+	hex[2] = '0';
+	hex[3] = 'e';
+	hex[4] = '7';
+	hex[5] = '\0';
+	
+	int hexc = sizeof(hex);
+
+	printf("%s -> ", hex);
+
+	HexToBin(hex, hexc, bin);
+
+	int i = 1;
+	printf("%6s", bin[0]);
+	for (i; i < hexc; i++)
+		printf("%s", bin[i]);	
+	printf("\n");
 	return 0;
 }
