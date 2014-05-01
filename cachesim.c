@@ -8,6 +8,10 @@ int assoc;
 char write_policy;
 int cache_size;
 int num_blocks;
+int b_tag, b_index, b_offset;
+int tag = 0;
+int index_ = 0; /* had to name index index_ because of error */
+int offset = 0;
 
 /* Will process and output all flags */
 void GetFlags(int argc, char *argv[]) 
@@ -48,38 +52,38 @@ void GetFlags(int argc, char *argv[])
 /* Prints header information for cache */
 void PrintHeader()
 {
-	int offset = block_size;
-	int index = num_sets;
+   b_offset= block_size;
+	b_index = num_sets;
 	int counter = 0;
 
 	/* Log base 2 of block_size to find offset */
-	while (offset >>= 1)
+	while (b_offset >>= 1)
 	{
 		counter++;
 	}
-	offset = counter;
+	b_offset = counter;
 	counter = 0;
 
 	/* Log base 2 of num_sets to find index */	
-	while (index >>= 1)
+	while (b_index >>= 1)
 	{
 		counter++;
 	}
-	index = counter;
+	b_index = counter;
 	
-	int tag = addr_space - offset - index;
+	b_tag = addr_space - b_offset - b_index;
 
 	cache_size = (num_sets * block_size * assoc) / 1024;
 	num_blocks = num_sets * assoc;
    
-	int extra_space = (num_blocks * tag) / 8;
+	int extra_space = (num_blocks * b_tag) / 8;
 	double percentage = ((double)extra_space / (cache_size * 1024)) * 100;
 
 	printf("%dKB %d-way associative cache:\n", cache_size, assoc);
 	printf("%2s Block size = %d bytes\n", "",  block_size);
 	printf("%2s Number of [sets,blocks] = [%d,%d]\n", "", num_sets, num_blocks);
 	printf("%2s Extra space for tag storage = %d bytes (%1.4g%)\n", "", extra_space, percentage);
-	printf("%2s Bits for [tag,index,offset] = [%d, %d, %d] = %d\n", "", tag, index, offset, tag+index+offset);
+	printf("%2s Bits for [tag,index,offset] = [%d, %d, %d] = %d\n", "", b_tag, b_index, b_offset , b_tag+b_index+b_offset);
 	
 	if (write_policy == 'b')
 		printf("%2s Write policy = %s\n", "", "Write-back");
@@ -159,8 +163,76 @@ void HexToBin(char hex[], int hexc, char *bin[])
 		//printf("%s\n", bin[i]);
 		i++;
 	}
-	bin[5] = "\0";
+	bin[6] = "\0";
 }
+
+void SetProperties(char bin[])
+{
+	char tag_bits[b_tag];
+	char index_bits[b_index];
+	char offset_bits[b_offset];
+	int i = 0;
+	int k = 0;
+	int l = 0;
+	printf("\n");
+	for (i; i < addr_space; i++) {
+		if (i < b_tag) {
+			tag_bits[i] = bin[i];
+		}
+		else if ((b_tag-1 < i) && (i < (b_tag+b_index))) {
+			index_bits[k] = bin[i];
+			k++;
+		}
+		else {
+			offset_bits[l] = bin[i];
+			l++;
+		}
+	}
+	
+	int j = b_tag-1;
+	tag_bits[b_tag] = '0';	
+	printf("Tag Bits = ");
+	for (i=0; i < b_tag; i++, j--) { 
+		printf("%c", tag_bits[i]);
+		if (tag_bits[i] == '1') {
+			tag += 2 << j-1;
+			if (i == b_tag-1)
+				tag += 1;
+		}
+	}
+	printf(" Tag = %d", tag);
+	printf("\n");
+
+	j = b_index-1;
+	index_bits[b_index] = '0';
+	printf("Index Bits = ");
+	for (i=0; i < b_index; i++, j--) {
+		printf("%c", index_bits[i]);
+		if (index_bits[i] == '1') {
+			index_ += 2 << j-1;
+			if (i == b_index-1)
+				index_ += 1;
+		}
+	}
+	printf(" Index = %d", index_);
+	printf("\n");
+	
+	j = b_offset-1;
+	offset_bits[b_offset] = '0';
+	printf("Offset Bits = ");
+	for (i=0; i < b_offset; i++, j--) {
+		printf("%c", offset_bits[i]);
+		if (offset_bits[i] == '1') {
+			offset += 2 << j-1;
+			if (i == b_offset-1)
+				offset += 1;
+		}
+	}
+	printf(" Offset = %d", offset);
+	printf("\n");
+	
+}
+
 
 int main(int argc, char *argv[]) 
 {
@@ -171,37 +243,42 @@ int main(int argc, char *argv[])
 	char *bin[6];
 
 	hex[0] = '0';
-	hex[1] = 'c';
-	hex[2] = '0';
-	hex[3] = 'e';
-	hex[4] = '7';
-	hex[5] = '\0';
+	hex[1] = '0';
+	hex[2] = 'c';
+	hex[3] = '0';
+	hex[4] = 'e';
+	hex[5] = '7';
+	hex[6] = '\0';
 	
 	int hexc = sizeof(hex);
 
-	printf("%s", hex);
+	printf("%-8s", hex);
 
 	HexToBin(hex, hexc, bin);
 
 	int i = 1;
-   printf("%7s", bin[0]);
+   //printf("%7s", bin[0]);
 	//for (i; i < hexc; i++)
 	//	printf("%s", bin[i]);	
 	//printf("\n");
 
 	char *str = bin[0];
 	char *newstr;
-	newstr = malloc(strlen(str)+1+4);
+	newstr = (char *)malloc(sizeof(char *)*addr_space);
 	strcpy(newstr, str);
 	for (i=1; i < hexc; i++)
 		strcat(newstr, bin[i]);
+	newstr[addr_space] = '\0';
 
 	for (i = 0; i < addr_space; i++) {
 		printf("%c", newstr[i]);
 		//printf("i=%d\n", i);
-		if (i == 8 || i == 14 )
+		if (i == 12 || i == 18 )
 				  printf(" ");
 	}
 	printf("\n");
+	
+	SetProperties(newstr);
+	free(newstr);
 	return 0;
 }
