@@ -174,7 +174,7 @@ void SetProperties(char bin[])
 	int i = 0;
 	int k = 0;
 	int l = 0;
-	printf("\n");
+	
 	for (i; i < addr_space; i++) {
 		if (i < b_tag) {
 			tag_bits[i] = bin[i];
@@ -191,45 +191,33 @@ void SetProperties(char bin[])
 	
 	int j = b_tag-1;
 	tag_bits[b_tag] = '0';	
-	printf("Tag Bits = ");
 	for (i=0; i < b_tag; i++, j--) { 
-		printf("%c", tag_bits[i]);
 		if (tag_bits[i] == '1') {
 			tag += 2 << j-1;
 			if (i == b_tag-1)
 				tag += 1;
 		}
 	}
-	printf(" Tag = %d", tag);
-	printf("\n");
 
 	j = b_index-1;
 	index_bits[b_index] = '0';
-	printf("Index Bits = ");
 	for (i=0; i < b_index; i++, j--) {
-		printf("%c", index_bits[i]);
 		if (index_bits[i] == '1') {
 			index_ += 2 << j-1;
 			if (i == b_index-1)
 				index_ += 1;
 		}
 	}
-	printf(" Index = %d", index_);
-	printf("\n");
 	
 	j = b_offset-1;
 	offset_bits[b_offset] = '0';
-	printf("Offset Bits = ");
 	for (i=0; i < b_offset; i++, j--) {
-		printf("%c", offset_bits[i]);
 		if (offset_bits[i] == '1') {
 			offset += 2 << j-1;
 			if (i == b_offset-1)
 				offset += 1;
 		}
 	}
-	printf(" Offset = %d", offset);
-	printf("\n");
 	
 }
 
@@ -244,23 +232,31 @@ int main(int argc, char *argv[])
 
 	hex[0] = '0';
 	hex[1] = '0';
-	hex[2] = 'c';
-	hex[3] = '0';
-	hex[4] = 'e';
-	hex[5] = '7';
+	hex[2] = '0';
+	hex[3] = '3';
+	hex[4] = '7';
+	hex[5] = '6';
 	hex[6] = '\0';
 	
 	int hexc = sizeof(hex);
 
 	printf("%-8s", hex);
 
+	FILE *infile;
+	infile = fopen("trace.in", "r");
+
+	if (!infile)
+		printf("No file stupid\n");
+	
+	char operation;
+	unsigned	int *newhex;
+	fscanf(infile, "%c %x", operation, newhex); 
+	printf("%c %x", operation, newhex);
+	/* Start of one line */
 	HexToBin(hex, hexc, bin);
 
+
 	int i = 1;
-   //printf("%7s", bin[0]);
-	//for (i; i < hexc; i++)
-	//	printf("%s", bin[i]);	
-	//printf("\n");
 
 	char *str = bin[0];
 	char *newstr;
@@ -276,9 +272,12 @@ int main(int argc, char *argv[])
 		if (i == 12 || i == 18 )
 				  printf(" ");
 	}
-	printf("\n");
-	
 	SetProperties(newstr);
+	printf("%9d %5d %4d", tag, index_, offset);	
+	printf("\n");
+	/* End of line */
+	
+	
 	free(newstr);
 	return 0;
 }
