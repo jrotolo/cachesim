@@ -1,3 +1,5 @@
+/* By: Jarrod Rotolo and Caleb Leger */
+
 #include <stdio.h>
 #include <string.h>
 
